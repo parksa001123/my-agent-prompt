@@ -16,9 +16,13 @@ Pi·OpenCode·Claude Code·Codex 4개 코딩 에이전트가 함께 쓰는 스�
 
 ## 빠른 시작
 
-저장소 루트에서 Bash(macOS·Linux·Git Bash)로 실행.
+Bash(macOS·Linux·Git Bash)로 실행. Windows에서 `python3`이 Microsoft Store 안내만 띄우면 `python`으로 바꿔 실행.
 
 ```bash
+# 0. 저장소 받기
+git clone https://github.com/parksa001123/my-agent-prompt.git
+cd my-agent-prompt
+
 # 1. 직접 관리하는 스킬 설치 → ~/.agents/skills/
 bash scripts/install-skills
 
@@ -81,13 +85,14 @@ python3 scripts/sync-external-skills --update diagram-design
 # 도구별 자원 설치 (외부 스킬 설치·갱신은 수행하지 않음)
 bash scripts/install-pi --restore --copy-config
 bash scripts/install-opencode
+bash scripts/install-claude
+bash scripts/install-codex
 ```
 
 - 스킬은 심링크로 설치. 사용자가 직접 관리하는 실제 디렉터리는 덮어쓰지 않음.
 - Windows(Git Bash)에서 Developer Mode가 꺼져 있으면 심링크 대신 디렉터리 junction을 만든다. 관리자 권한 불필요.
-- Windows에서 `python3`이 Microsoft Store 안내만 띄우면 `python scripts/sync-external-skills`처럼 실제 인터프리터로 실행.
 - 외부 원본을 이 저장소에 복사하지 않음. 브랜치 추적 및 필요할 때만 수동 업데이트.
-- Codex 스킬 설치 및 upstream 플러그인·에이전트 등록은 자동화 대상 아님.
+- upstream 외부 스킬의 플러그인·에이전트 등록(예: Codex `agents/openai.yaml`, Claude 플러그인)은 자동화 대상 아님.
 - 스킬 설치와 실제 런타임 호환성은 별도 검증 필요.
 - Pi 설치 후 모델·프로바이더 설정은 `~/.pi/agent/settings.json`에서 직접 수정. 자세한 내용은 [runtime/pi/README.md](runtime/pi/README.md).
 - 외부 스킬의 경로·옵션·충돌 처리 기준은 [외부 스킬 관리](resources/external-skills.md) 참고.
