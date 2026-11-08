@@ -11,6 +11,7 @@
 - [외부 스킬 요청 처리](#외부-스킬-요청-처리)
 - [Pi 특이사항](#pi-특이사항)
 - [OpenCode 특이사항](#opencode-특이사항)
+- [Claude Code·Codex 특이사항](#claude-codecodex-특이사항)
 
 ## 목적
 
@@ -117,6 +118,8 @@ bash scripts/install-codex
 bash scripts/check-resources
 ```
 
+Windows에서 `python3`이 Microsoft Store 안내만 띄우면 `python`으로 실행한다.
+
 ## 스킬 배포 (Agent Skills 표준)
 
 `resources/skills/`의 스킬은 도구별 경로가 아니라 Agent Skills 표준 위치 `~/.agents/skills/`로 심링크된다.
@@ -149,3 +152,10 @@ GitHub 스킬 추가·설치·동기화·업데이트 요청 시 먼저 [외부 
 ## OpenCode 특이사항
 
 - `adapters/opencode/agents/`의 agent 정의는 OpenCode 전용 frontmatter(`mode`, `tools`)를 포함한다. 도구 독립적인 역할 정의는 `resources/roles/`로 추출하는 것을 목표로 하되, 현재는 OpenCode가 include 문법을 지원하지 않아 adapter에 전체 정의를 둔다.
+
+## Claude Code·Codex 특이사항
+
+- 두 도구의 wrapper는 저장소 상대 경로가 아니라 `~/.agents/commands/<name>.md`를 읽는다. 다른 프로젝트에서 호출해도 본문을 찾을 수 있게 하기 위함이다.
+- Claude Code는 하위 디렉터리로 명령을 묶으므로 `/my-agent-prompt:<name>`으로 호출된다. Windows에서 파일 단위 링크가 불가능해 디렉터리 전체를 링크한 결과다.
+- Codex wrapper는 `~/.agents/skills/`에 설치되므로 Pi·OpenCode에서도 스킬로 보인다. `disable-model-invocation: true`와 `agents/openai.yaml`의 `allow_implicit_invocation: false`로 자동 호출을 막는다.
+- 공유 명령을 추가하면 `adapters/claude/commands/`와 `adapters/codex/skills/`에도 wrapper를 두고 `check-resources`로 확인한다. 설치된 도구는 다시 시작해야 새 명령을 읽는다.
