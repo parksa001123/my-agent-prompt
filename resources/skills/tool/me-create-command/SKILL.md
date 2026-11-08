@@ -105,7 +105,7 @@ Ask a follow-up (single question):
 - Options:
     - `Project (.pi/prompts/)` — Available only in this project
     - `Global (~/.pi/agent/prompts/)` — Available in all projects
-    - `e-build/my-agent-prompt` — **Create in `~/IdeaProjects/e-build/my-agent-prompt/` and symlink to `~/.pi/agent/prompts/`** (Recommended)
+    - `my-agent-prompt repo` — **Shared command in the my-agent-prompt repo, installed for Pi (and optionally Claude Code / Codex)** (Recommended)
 
 ### Interview Summary
 
@@ -134,7 +134,28 @@ Use `ask_user_question` to confirm:
 
 ## Phase 3: Generate
 
-Write the file directly with `write` into `~/IdeaProjects/e-build/my-agent-prompt/`. After writing, symlink it to the user-level prompts directory so pi can discover it. Structure:
+For `Project` or `Global`, write `{name}.md` directly with `write` into that
+prompts directory.
+
+For `my-agent-prompt repo`, find the repo root (`REPO`) from the shared-command
+link that its installers create, then follow the repo's own layout:
+
+```bash
+REPO="$(cd "$(dirname "$(readlink -f ~/.agents/commands)")/.." && pwd)"
+```
+
+1. Prompt body → `$REPO/resources/commands/{name}.md` (the canonical body).
+2. Pi wrapper → `$REPO/adapters/pi/commands/{name}.md` containing only the
+   frontmatter below plus: Read `resources/commands/{name}.md` in this repo and
+   follow its instructions exactly.
+3. Ask whether Claude Code and Codex should get it too. If yes, copy the
+   patterns in `$REPO/adapters/README.md` (`adapters/claude/commands/{name}.md`,
+   `adapters/codex/skills/{name}/`).
+
+If `~/.agents/commands` does not exist, ask the user for the repo path.
+
+Template file structure (`Project` / `Global` file, or the repo body with the
+same frontmatter on its Pi wrapper):
 
 ````markdown
 ---
@@ -167,15 +188,16 @@ Rules while writing:
 
 Validate yourself (no subagent).
 
-### Symlink (if Location was `e-build/my-agent-prompt`)
+### Install (if Location was `my-agent-prompt repo`)
 
-If the user chose `e-build/my-agent-prompt` in Phase 2, symlink the generated file so pi discovers it as a global command:
+Run the repo's installers instead of linking files by hand. They also handle
+Windows, where plain `ln -s` silently copies:
 
 ```bash
-ln -sf ~/IdeaProjects/e-build/my-agent-prompt/{name}.md ~/.pi/agent/prompts/{name}.md
+cd "$REPO"
+bash scripts/install-pi --restore     # plus install-claude / install-codex if added
+bash scripts/check-resources
 ```
-
-Use absolute path for the symlink target so it resolves correctly regardless of cwd.
 
 ### Validate
 
@@ -187,8 +209,8 @@ Check against the pi prompt-template spec:
 - [ ] Every `$N` / `${N:-default}` referenced in the body is covered by the spec.
 - [ ] No non-existent frontmatter fields (`model`, `agent`, `subtask`, etc.).
 - [ ] File is in a real prompts location (project `.pi/prompts/`, global
-  `~/.pi/agent/prompts/`, or the e-build/my-agent-prompt path).
-- [ ] Symlink points to correct file and pi can discover it (`ls -l ~/.pi/agent/prompts/{name}.md`).
+  `~/.pi/agent/prompts/`, or the repo's `resources/commands/` + wrapper).
+- [ ] For the repo: `check-resources` passes and `ls -l ~/.pi/agent/prompts/{name}.md` shows the wrapper.
 
 Confirm the file exists and frontmatter parses:
 
@@ -221,13 +243,13 @@ Present the generated command:
 
 ## Phase 6: Commit & Push
 
-After the command is generated, validated, and symlinked, commit and push the
-change in the e-build prompt repository:
+Only for `my-agent-prompt repo`: after the command is generated, validated and
+installed, commit and push it in that repository:
 
 ```bash
-cd ~/IdeaProjects/e-build/my-agent-prompt
-git add {name}.md
-git commit -m "feat(prompt): add /{name} command"
+cd "$REPO"
+git add resources/commands/{name}.md adapters/
+git commit -m "feat(commands): add /{name} command"
 git push
 ```
 
